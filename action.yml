@@ -1,0 +1,51 @@
+name: Flatline check
+description: Fail the run and ping Telegram when a bot stops recording events, even if its own runs are green.
+branding:
+  icon: activity
+  color: red
+
+inputs:
+  source:
+    description: CSV, JSONL or SQLite file the bot writes its events to.
+    required: true
+  time-field:
+    description: "Column holding the event time: ISO 8601 or unix seconds/ms. Default: timestamp."
+  where:
+    description: Only count rows matching field=value or field!=value. One filter per line.
+  window:
+    description: "How far back to look, like 30m, 48h or 7d. Default: 24h."
+  min:
+    description: "Fewest events that still counts as healthy. Default: 1."
+  name:
+    description: "Label for this check in the output. Default: the file name."
+  format:
+    description: "csv, jsonl or sqlite. Default: guessed from the file extension."
+  table:
+    description: "SQLite table to read. Default: the only table."
+  query:
+    description: SQLite query to read rows from, instead of a whole table.
+  history:
+    description: "Days of per-day counts to show. Default: 14."
+  telegram-token:
+    description: Telegram bot token. Leave empty to skip the Telegram alert.
+  telegram-chat:
+    description: Telegram chat ID to send the alert to.
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        FLATLINE_SOURCE: ${{ inputs.source }}
+        FLATLINE_TIME_FIELD: ${{ inputs.time-field }}
+        FLATLINE_WHERE: ${{ inputs.where }}
+        FLATLINE_WINDOW: ${{ inputs.window }}
+        FLATLINE_MIN: ${{ inputs.min }}
+        FLATLINE_NAME: ${{ inputs.name }}
+        FLATLINE_FORMAT: ${{ inputs.format }}
+        FLATLINE_TABLE: ${{ inputs.table }}
+        FLATLINE_QUERY: ${{ inputs.query }}
+        FLATLINE_HISTORY: ${{ inputs.history }}
+        TELEGRAM_BOT_TOKEN: ${{ inputs.telegram-token }}
+        TELEGRAM_CHAT_ID: ${{ inputs.telegram-chat }}
+      run: python3 "$GITHUB_ACTION_PATH/flatline.py"
